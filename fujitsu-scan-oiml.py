@@ -38,49 +38,57 @@ class picture2file(work):
         self.page           = page
     def doIt(self):
         self.im.save(self.doc.filename(self.page))
+        del self.im
 
 class document:
-    def __init__(self, targetfile, format):
-        self.targetfile = targetfile
+    def __init__(self, targetfile=None, format="pdf"):
+        if targetfile=None:
+            self.targetfile="%s/scan-%d" % (destination, int(time.time))
+        else:
+            self.targetfile=targetfile
         self.format     = format
         self.pages      = []
+        self.pagenumber = 1
 
-    class page:
-        def __init__(self, timestamp, number, resolution, colorspace, parent)
-            self.timestamp  = timestamp
-            self.number     = number
-            self.resolution = resolution
-            self.colorspace = colorspace
-            self.parent     = parent
+    def filename(self, page=None):
+        if page=None:
+            return "%s.%s" % (self.targetfile,self.format)
+        else
+            return "%s-%d.%s" % (self.targetfile,page,self.format)
+
+    def process_image(self, im):
+        if self.format = "pdf":
+            w = picture2pdf(im, self, self.pagenumber, "DCT")
+        else:
+            w = picture2file(im, self, self.pagenumber)
+        self.pagenumber = self.pagenumber + 1
+        return w
+
+    def insert(self, pagenumber, page):
+        pass
+
+    def finalize(self):
+        pass
 
 
-
-
-signal.signal(signal.SIGQUIT,handler)
+# =-=-=-=-=-=-= MAIN =-=-=-=-=-=-=-=
 
 sane.init()
-
 s = sane.open(sane.get_devices()[0][0])
 
-
-def image_converter():
+work_queue = Queue.Queue()
+def worker():
     while True:
-        item = q.get()
-        if item.endswith(".jpg"):
-            subprocess.call(["convert",item,item+".pdf"])
-            os.unlink(item)
-        else:
-            files = glob.glob('/tmp/'+item.rsplit('/',1)[1].rsplit('.',2)[0]+'*pdf')
-            subprocess.call(["gs","-sOutputFile="+item, "-sPAPERSIZE=a4", "-sDEVICE=pdfwrite", "-dBATCH", "-dNOPAUSE", "-dPDFFitPage"]+files)
-            for file in files:
-                os.unlink(file)
-        q.task_done()
+        item = work_queue.get()
+        item.doIt()
+        work_queue.task_done()
 
-q = Queue.Queue()
 for i in range(num_worker_threads):
-    t = threading.Thread(target=image_converter)
-    t.setDaemon(True)
+    t = threading.Thread(target=worker)
     t.start()
+
+
+doc = None
 
 try:
     while True:
@@ -118,11 +126,13 @@ try:
             s.source = 'ADF Duplex'
         else:
             s.source = 'ADF Front'
-
-        if x == 9 or x == 10:
-            file = destination+'%d-scan%d.tiff'
-        else:
-            file = '/tmp/%d-scan%d.jpg'
+        
+        if doc=None:
+            if x == 9 or x == 10:
+                format="tiff"
+            else:
+                format="pdf"
+            doc=document(format=format)
 
         # we want a4
         s.pageheight = 297
@@ -130,20 +140,18 @@ try:
         s.br_y = 297
         s.br_x = 210
 
-        timestamp = int(time.time())
-
-        i=0
         for im in s.multi_scan():
-            i=i+1 
-            name = file % (timestamp,i)
-            im.save(name)
-            q.put(name)
-        q.join()
-        if not(x == 9 or x == 10):
-            q.put(final+'%d-scan.pdf' % timestamp)
+            q.put(doc.process_image(im))
+
+        if pressed_scan:
+            doc.finalize()
+            del doc
+            doc = None
 
 finally:
-    q.join()
     s.cancel()
+    q.join()
+    if doc:
+        doc.finalize()
     s.close()
 
