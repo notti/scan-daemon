@@ -1,1 +1,0 @@
-gs -sOutputFile=test.pdf -sPAPERSIZE=a4 -r150x150 -sDEVICE=pdfwrite -dBATCH -dNOPAUSE -dEPSFitPage

@@ -22,13 +22,6 @@ if default_compressmode == 'None':
     default_compressmode = None
 default_scanner = config.get('Default','scanner')
 destination = config.get('Default', 'destination')
-default_buttons = {}
-for i in range(1,10):
-    button = config.get('Buttons', str(i))
-    button = button.split(' ')
-    button[1] = 'ADF '+button[1]
-    button[2] = int(button[2])
-    default_buttons[i] = button 
 
 
 class work:

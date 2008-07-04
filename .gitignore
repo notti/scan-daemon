@@ -3,4 +3,6 @@
 *.ps
 *.eps
 *.pdf
+*.pyc
+*.swp
 testbilder/
