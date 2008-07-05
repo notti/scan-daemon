@@ -1,6 +1,0 @@
-create class -> (imagename, colorspace, resolution)
-scan_to -> append
-pdflib
-array mit einzelbildern im eigenen thread
--colorspace Gray
--colorspace RGB
