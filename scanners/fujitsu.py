@@ -4,11 +4,9 @@ import direct
 class fi_5110Cdj(direct.direct_scanner):
     def __init__(self, config):
         self.doc                = None
-        self.scanner            = scanner
-        self.work_queue         = work_queue
         self.default_buttons    = {}
         for i in range(1,10):
-            button = config.get('fi-5110Cdj', str(i))
+            button = config.parser.get('fi-5110Cdj', str(i))
             button = button.split(' ')
             button[1] = 'ADF '+button[1]
             button[2] = int(button[2])

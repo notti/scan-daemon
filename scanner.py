@@ -3,6 +3,7 @@
 import signal, os, sys, threading, subprocess, stat
 import pwd, grp
 import ConfigParser
+import control, scanners
 
 # -=-=-=-=-=- READ CONFIG -=-=-=-=-=-=-
 class cfg:
@@ -17,8 +18,10 @@ try:
     config.uid          = config.parser.get('Default','uid')
     config.gid          = config.parser.get('Default','gid')
     config.destination  = config.parser.get('Default', 'destination')
+    config.socket       = config.parser.get('Default', 'socket')
+    config.port         = config.parser.getint('Default', 'port')
 except:
-    print """Config error. Need at least a "scanner", "destination", "uid" and "gid" in the [Default] Section!"""
+    print """Config error. Need at least a "scanner", "destination", "uid", "gid", "socket" and "port" in the [Default] Section!"""
     exit(os.EX_CONFIG)
 config.num_worker_threads = config.parser.getint('Default','worker_threads')
 config.default_dct_quality = config.parser.getint('Default','dct_quality')
@@ -39,19 +42,11 @@ if config.gid.isdigit():
 else:
     config.gid = grp.getgrnam(config.gid)[2]
 
-# Create Directory for the communication socket and set rights
-
-try:
-    os.makedirs("/var/run/scanner/")
-except OSError, (errno, strerror):
-    if errno != 17:
-        raise
-os.chown("/var/run/scanner",config.uid, config.gid)
-os.chmod("/var/run/scanner",stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-try:
-    os.unlink("/var/run/scanner/socket.sock")
-except:
-    pass
+scanner_list = {}
+for scanner in config.scanner.split(','):
+    scanner = scanner.strip()
+    scanner_list[scanner] = scanners.scanners[scanner](config)
+notify = control.control(config, scanner_list)
 
 os.setgid(config.gid)
 os.setuid(config.uid)
@@ -59,5 +54,8 @@ os.setuid(config.uid)
 # OK - so lets fork the main program which handles signals and spawns the necessary threads
 
 if os.fork() == 0:
-   print "ok!" 
+    t = threading.Thread(target = notify.serve_forever)
+    t.setDaemon(True)
+    t.start()
+    signal.pause()
 

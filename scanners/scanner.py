@@ -1,6 +1,4 @@
-import scanner
-
-class direct_scanner(scanner.scanner):
+class scanner:
     def __init__(self, config):
         pass
 
@@ -16,3 +14,5 @@ class direct_scanner(scanner.scanner):
     def wait_for_button(self, scanner):
         pass
 
+    def status_change(self, status):
+        print str(self) + " " + status
