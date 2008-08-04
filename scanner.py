@@ -3,7 +3,7 @@
 import signal, os, sys, threading, subprocess, stat
 import pwd, grp
 import ConfigParser
-import control, scanners
+import control, scanners, http
 
 # -=-=-=-=-=- READ CONFIG -=-=-=-=-=-=-
 class cfg:
@@ -48,6 +48,8 @@ for scanner in config.scanner.split(','):
     scanner_list[scanner] = scanners.scanners[scanner](config)
 notify = control.control(config, scanner_list)
 
+webserver = http.http(config, scanner_list)
+
 os.setgid(config.gid)
 os.setuid(config.uid)
 
@@ -57,5 +59,13 @@ if os.fork() == 0:
     t = threading.Thread(target = notify.serve_forever)
     t.setDaemon(True)
     t.start()
+    t = threading.Thread(target = webserver.serve_forever)
+    t.setDaemon(True)
+    t.start()
+    for name, scanner in scanner_list.iteritems():
+        t = threading.Thread(target = scanner.serve_forever)
+        t.setDaemon(True)
+        t.start()
+    
     signal.pause()
 

@@ -1,10 +1,12 @@
 import time
-import direct
+import scanner
 
-class fi_5110Cdj(direct.direct_scanner):
+class fi_5110Cdj(scanner.direct_scanner):
     def __init__(self, config):
+        scanner.direct_scanner.__init__(self, config)
         self.doc                = None
         self.default_buttons    = {}
+        self.name = "fi-5110Cdj"
         for i in range(1,10):
             button = config.parser.get('fi-5110Cdj', str(i))
             button = button.split(' ')
@@ -28,12 +30,17 @@ class fi_5110Cdj(direct.direct_scanner):
         scanner.br_y       = 297
         scanner.br_x       = 210
 
+    def scan(self, buttons_pressed = None, doc = None):
+        print buttons_pressed
+
     def wait_for_button(self, scanner):
         pressed_scan = 0
         pressed_send = 0
-        while not (pressed_scan or pressed_send):
+        while (not (pressed_scan or pressed_send)) and self.connected:
             pressed_scan = scanner.button_scan
             pressed_send = scanner.button_send
-            time.sleep(2)
+            self.event.wait(2)
+        if not self.connected:
+            return None
         return pressed_scan, pressed_send, scanner.button_function
 
