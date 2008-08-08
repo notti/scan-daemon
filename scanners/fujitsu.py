@@ -1,9 +1,16 @@
 import time
 import scanner
 
-class fi_5110Cdj(scanner.direct_scanner):
+class fi_5110Cdj(scanner.usb_scanner):
+    USB_ID_VENDOR  = 0x04c5
+    USB_ID_PRODUCT = 0x1097
+    IN_ENDPOINT    = 0x02
+    OUT_ENDPOINT   = 0x81
+
+    GET_OPTIONS    = '\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc2\x00\x00\x00\x00\x00\x00\x00\x0c\x00\x00\x00'
+
     def __init__(self, config):
-        scanner.direct_scanner.__init__(self, config)
+        scanner.usb_scanner.__init__(self, config)
         self.doc                = None
         self.default_buttons    = {}
         self.name = "fi-5110Cdj"
@@ -20,27 +27,40 @@ class fi_5110Cdj(scanner.direct_scanner):
     def get_colorspaces(self):
         return ('Color', 'Gray', 'Halftone', 'Lineart')
 
-    def set_parameters(self, scanner, mode='Color', source='ADF Front', resolution=300):
-        scanner.source     = source
-        scanner.mode       = mode
-        scanner.resolution = resolution
-                
-        scanner.pageheight = 297
-        scanner.pagewidth  = 210
-        scanner.br_y       = 297
-        scanner.br_x       = 210
-
     def scan(self, buttons_pressed = None, doc = None):
         print buttons_pressed
+
+    def read_buttons(self):
+        self.send(self.GET_OPTIONS)
+        data   = self.recieve(12)
+        status = self.recieve(13)
+        ret = {}
+        ret["function"]     = data[5]
+        ret["button_send"]  = (data[4]>>2)&1
+        ret["button_scan"]  = (data[4])&1
+        ret["top_edge"]     = (data[2]>>7)&1
+        ret["adf_loaded"]   = not ((data[3]>>7)&1)
+        ret["omr"]          = (data[3]>>6)&1
+        ret["adf_open"]     = (data[3]>>5)&1
+        ret["powersave"]    = (data[4]>>7)&1
+        ret["doublefeed"]   = (data[6])&1
+        ret["errorcode"]    = data[7]
+        return ret
+
 
     def wait_for_button(self, scanner):
         pressed_scan = 0
         pressed_send = 0
         while (not (pressed_scan or pressed_send)) and self.connected:
-            pressed_scan = scanner.button_scan
-            pressed_send = scanner.button_send
+            try:
+                status = self.read_buttons()
+            except:
+                self.connected = False
+                break
+            pressed_scan = status["button_scan"]
+            pressed_send = status["button_send"]
             self.event.wait(2)
         if not self.connected:
             return None
-        return pressed_scan, pressed_send, scanner.button_function
+        return pressed_scan, pressed_send, status["function"]
 

@@ -1,4 +1,4 @@
-import sane, time, threading
+import time, threading, usbdevice
 
 class scanner:
     def __init__(self, config):
@@ -10,9 +10,6 @@ class scanner:
     def get_colorspaces(self):
         pass
 
-    def set_parameters(self, scanner, mode, source, resolution):
-        pass
-
     def wait_for_button(self, scanner):
         pass
 
@@ -22,9 +19,10 @@ class scanner:
     def serve_forever(self):
         pass
 
-class direct_scanner(scanner):
+class usb_scanner(scanner,usbdevice.usb_device):
     def __init__(self, config):
         scanner.__init__(self, config)
+        usbdevice.usb_device.__init__(self)
         self.connected = False
         self.event = threading.Event()
 
@@ -32,9 +30,6 @@ class direct_scanner(scanner):
         pass
 
     def get_colorspaces(self):
-        pass
-
-    def set_parameters(self, scanner, mode, source, resolution):
         pass
 
     def wait_for_button(self, scanner):
@@ -47,32 +42,35 @@ class direct_scanner(scanner):
             self.connected = False
             self.event.set()
 
-    def attach_scanner(self, name):
+    def attach_scanner(self):
         for i in range(2):
-            print "checking ..."
-            for device in sane.get_devices():
-                print device[2]
-                if device[2] == name:
-                    return sane.open(device[0])
-            self.event.wait(1)
-        return None
+            try:
+                print "trying..."
+                self.claim()
+                return True
+            except:
+                self.event.wait(1)
+        return False
+
+    def read_buttons(self):
+        return {}
 
     def scan(self, buttons_pressed=None, doc=None):
         pass
 
     def serve_forever(self):
-        scanner = self.attach_scanner(self.name)
+        self.connected = self.attach_scanner()
         while True:
-            while scanner == None:
+            print "unconnected"
+            while self.connected == False:
                 self.event.wait(20)
                 self.event.clear()
-                scanner = self.attach_scanner(self.name)
+                self.connected = self.attach_scanner()
             print "connected"
-            self.connected = True
             while self.connected:
                 buttons_pressed = self.wait_for_button(scanner)
                 if buttons_pressed == None:
-                    scanner = None
+                    self.connected = False
                     break
                 self.scan(buttons_pressed)
 
