@@ -1,7 +1,8 @@
 import time
-import scanner
+import device
 
-class fi_5110Cdj(scanner.usb_scanner):
+
+class fi_5110Cdj(device.usb_scanner):
     USB_ID_VENDOR  = 0x04c5
     USB_ID_PRODUCT = 0x1097
     IN_ENDPOINT    = 0x02
@@ -10,7 +11,7 @@ class fi_5110Cdj(scanner.usb_scanner):
     GET_OPTIONS    = '\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc2\x00\x00\x00\x00\x00\x00\x00\x0c\x00\x00\x00'
 
     def __init__(self, config):
-        scanner.usb_scanner.__init__(self, config)
+        device.usb_scanner.__init__(self, config)
         self.doc                = None
         self.default_buttons    = {}
         self.name = "fi-5110Cdj"
@@ -64,3 +65,4 @@ class fi_5110Cdj(scanner.usb_scanner):
             return None
         return pressed_scan, pressed_send, status["function"]
 
+devices = {'fi-5110Cdj': fi_5110Cdj}

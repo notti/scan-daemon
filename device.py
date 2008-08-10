@@ -25,6 +25,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         usbdevice.usb_device.__init__(self)
         self.connected = False
         self.event = threading.Event()
+        self.doc = None
 
     def get_sources(self):
         pass
@@ -45,7 +46,6 @@ class usb_scanner(scanner,usbdevice.usb_device):
     def attach_scanner(self):
         for i in range(2):
             try:
-                print "trying..."
                 self.claim()
                 return True
             except:
@@ -55,18 +55,16 @@ class usb_scanner(scanner,usbdevice.usb_device):
     def read_buttons(self):
         return {}
 
-    def scan(self, buttons_pressed=None, doc=None):
+    def scan(self, finish = True):
         pass
 
     def serve_forever(self):
         self.connected = self.attach_scanner()
         while True:
-            print "unconnected"
             while self.connected == False:
                 self.event.wait(20)
                 self.event.clear()
                 self.connected = self.attach_scanner()
-            print "connected"
             while self.connected:
                 buttons_pressed = self.wait_for_button(scanner)
                 if buttons_pressed == None:

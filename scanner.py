@@ -3,7 +3,8 @@
 import signal, os, sys, threading, subprocess, stat
 import pwd, grp
 import ConfigParser
-import control, scanners, http
+import control, device, http
+import glob
 
 # -=-=-=-=-=- READ CONFIG -=-=-=-=-=-=-
 class cfg:
@@ -42,10 +43,21 @@ if config.gid.isdigit():
 else:
     config.gid = grp.getgrnam(config.gid)[2]
 
+devices = []
+for device in glob.iglob('devices/*py'):
+    try:
+        dev = __import__(device[:-3]).devices
+    except:
+        print "Could not load",device
+    else:
+        devices += zip(dev.keys(), dev.values())
+
+devices = dict(devices)
+
 scanner_list = {}
 for scanner in config.scanner.split(','):
     scanner = scanner.strip()
-    scanner_list[scanner] = scanners.scanners[scanner](config)
+    scanner_list[scanner] = devices[scanner](config)
 notify = control.control(config, scanner_list)
 
 webserver = http.http(config, scanner_list)
