@@ -1,4 +1,5 @@
 import time, threading, usbdevice
+import subprocess
 
 class scanner:
     def __init__(self, config):
@@ -55,8 +56,35 @@ class usb_scanner(scanner,usbdevice.usb_device):
     def read_buttons(self):
         return {}
 
-    def scan(self, finish = True):
-        pass
+# XXX Conversion and error handling
+    def scan(self, params):
+        del params['document-type']
+        params['output-file'] = self.name+'-scan-%04d'
+        params['d'] = self.get_sane_name()
+        command = ['/usr/bin/scanadf']
+        for option, value in params.iteritems():
+            if len(option) == 1:
+                command.append('-'+option)
+            else:
+                command.append('--'+option)
+            if len(value):
+                command.append(value)
+        self.unclaim()
+        print command
+        messages = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE).stderr
+        page = 0
+        for line in messages:
+            print line
+            msg = line.split(' ')
+            if len(msg) == 3:
+                if msg[1] == 'document':
+                    print 'scanned page ',page,msg[2]
+                    page+=1
+        print 'finished'
+        self.claim()
+
+    def get_sane_name(self):
+        return ''
 
     def serve_forever(self):
         self.connected = self.attach_scanner()

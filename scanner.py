@@ -43,6 +43,7 @@ if config.gid.isdigit():
 else:
     config.gid = grp.getgrnam(config.gid)[2]
 
+# XXX move to device.py V
 devices = []
 for device in glob.iglob('devices/*py'):
     try:
@@ -58,10 +59,14 @@ scanner_list = {}
 for scanner in config.scanner.split(','):
     scanner = scanner.strip()
     scanner_list[scanner] = devices[scanner](config)
+
+# ^ 
+
 notify = control.control(config, scanner_list)
 
 webserver = http.http(config, scanner_list)
 
+os.umask(0077)
 os.setgid(config.gid)
 os.setuid(config.uid)
 

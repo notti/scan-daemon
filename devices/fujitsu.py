@@ -19,7 +19,6 @@ class fi_5110Cdj(device.usb_scanner):
             button = config.parser.get('fi-5110Cdj', str(i))
             button = button.split(' ')
             button[1] = 'ADF '+button[1]
-            button[2] = int(button[2])
             self.default_buttons[i] = button 
 
     def get_sources(self):
@@ -27,9 +26,6 @@ class fi_5110Cdj(device.usb_scanner):
 
     def get_colorspaces(self):
         return ('Color', 'Gray', 'Halftone', 'Lineart')
-
-    def scan(self, buttons_pressed = None, doc = None):
-        print buttons_pressed
 
     def read_buttons(self):
         self.send(self.GET_OPTIONS)
@@ -48,6 +44,8 @@ class fi_5110Cdj(device.usb_scanner):
         ret["errorcode"]    = data[7]
         return ret
 
+    def get_sane_name(self):
+        return 'fujitsu:'+self.get_address()
 
     def wait_for_button(self, scanner):
         pressed_scan = 0
@@ -63,6 +61,7 @@ class fi_5110Cdj(device.usb_scanner):
             self.event.wait(2)
         if not self.connected:
             return None
-        return pressed_scan, pressed_send, status["function"]
+        button = self.default_buttons[status["function"]]
+        return {'document-type': button[3], 'source': button[1], 'mode': button[0], 'resolution': button[2]}
 
 devices = {'fi-5110Cdj': fi_5110Cdj}
