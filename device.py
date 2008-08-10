@@ -56,7 +56,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
     def read_buttons(self):
         return {}
 
-# XXX Conversion and error handling
+# XXX Conversion
     def scan(self, params):
         del params['document-type']
         params['output-file'] = self.name+'-scan-%04d'
@@ -70,12 +70,12 @@ class usb_scanner(scanner,usbdevice.usb_device):
             if len(value):
                 command.append(value)
         self.unclaim()
-        print command
         messages = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE).stderr
         page = 0
         for line in messages:
-            print line
             msg = line.split(' ')
+            if msg[0] == 'scanadf:':
+                print 'ERROR!'
             if len(msg) == 3:
                 if msg[1] == 'document':
                     print 'scanned page ',page,msg[2]
