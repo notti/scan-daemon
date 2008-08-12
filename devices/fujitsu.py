@@ -10,12 +10,12 @@ class fi_5110Cdj(device.usb_scanner):
 
     GET_OPTIONS    = '\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc2\x00\x00\x00\x00\x00\x00\x00\x0c\x00\x00\x00'
 
-    def __init__(self, config):
-        device.usb_scanner.__init__(self, config)
+    def __init__(self, config, worker):
+        device.usb_scanner.__init__(self, config, worker)
         self.doc                = None
         self.default_buttons    = {}
         self.name = "fi-5110Cdj"
-        for i in range(1,10):
+        for i in range(1,11):
             button = config.parser.get('fi-5110Cdj', str(i))
             button = button.split(' ')
             button[1] = 'ADF '+button[1]
@@ -62,6 +62,6 @@ class fi_5110Cdj(device.usb_scanner):
         if not self.connected:
             return None
         button = self.default_buttons[status["function"]]
-        return {'document-type': button[3], 'source': button[1], 'mode': button[0], 'resolution': button[2]}
+        return {'document-type': button[3], 'source': button[1], 'mode': button[0], 'resolution': button[2], 'document-finish': pressed_scan}
 
 devices = {'fi-5110Cdj': fi_5110Cdj}

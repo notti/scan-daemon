@@ -1,5 +1,5 @@
 import threading
-import ExitQueue
+import Queue
 
 class work:
     """Base class for doin' all the work
@@ -9,22 +9,20 @@ class work:
 
 class worker:
     def __init__(self, num):
-        self.queue = ExitQueue.Queue()
-        for i in range(num):
-            t = threading.Thread(target=self.worker)
-            t.start()
+        self.queue = Queue.Queue()
+        self.num = num
 
     def worker(self):
-        try:
-            while True:
-                item = self.queue.get()
-                item.doIt()
-                self.queue.task_done()
-        except ExitQueue.Exit:
-            pass
+        while True:
+            item = self.queue.get()
+            item.doIt()
+            self.queue.task_done()
 
     def put(self, item):
         self.queue.put(item)
-    
-    def __del__(self):
-        self.queue.close()
+
+    def serve_forever(self):
+        for i in range(self.num):
+            t = threading.Thread(target=self.worker)
+            t.setDaemon(True)
+            t.start()

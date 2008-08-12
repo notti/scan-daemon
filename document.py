@@ -1,6 +1,7 @@
+from __future__ import with_statement
 import threading, time
 import pdf, worker, conversion
-from __future__ import with_statement
+import os
 
 class outDocument(worker.work):
     """Takes a document and finalizes it
@@ -15,11 +16,12 @@ class outDocument(worker.work):
 
 class document:
     """Class representing a document"""
-    def __init__(self, targetfile=None, format="pdf", maxconversion=0):
+    def __init__(self, config, targetfile=None, format="pdf", maxconversion=0):
         if targetfile == None:
-            self.targetfile="%s/scan-%d" % (destination, int(time.time()))
+            self.targetfile="%s/scan-%d" % (config.destination, int(time.time()))
         else:
             self.targetfile=targetfile
+        self.config         = config
         self.format         = format
         self.pages          = []
         self.pagenumber     = 0
@@ -33,9 +35,13 @@ class document:
         else:
             return "%s-%d.%s" % (self.targetfile,page,self.format)
 
-    def process_image(self, im):
+    def process_image(self, im, compressmode='DCT', dct_quality=None, flatecompresslevel=None):
+        if dct_quality == None:
+            dct_quality = self.config.default_dct_quality
+        if flatecompresslevel == None:
+            flatecompresslevel = self.config.default_flatecompresslevel
         if self.format == "pdf":
-            w = pdf.picture2pdf(im, self, self.pagenumber, default_compressmode, default_dct_quality, default_flatecompresslevel)
+            w = pdf.picture2pdf(im, self, self.pagenumber, compressmode, dct_quality, flatecompresslevel)
             self.pages.append(None)
         else:
             w = conversion.picture2file(im, self, self.pagenumber+1)
@@ -58,5 +64,6 @@ class document:
             while self.in_conversion:
                 self.conversion_condition.wait()
             pdf.makepdf(self.filename(), self.pages)
+            os.chmod(self.filename(), 0664)
             del self.pages
 

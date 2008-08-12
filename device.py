@@ -1,5 +1,6 @@
 import time, threading, usbdevice
 import subprocess
+import document
 
 class scanner:
     def __init__(self, config):
@@ -21,12 +22,13 @@ class scanner:
         pass
 
 class usb_scanner(scanner,usbdevice.usb_device):
-    def __init__(self, config):
+    def __init__(self, config, worker):
         scanner.__init__(self, config)
         usbdevice.usb_device.__init__(self)
         self.connected = False
         self.event = threading.Event()
         self.doc = None
+        self.worker = worker
 
     def get_sources(self):
         pass
@@ -56,9 +58,13 @@ class usb_scanner(scanner,usbdevice.usb_device):
     def read_buttons(self):
         return {}
 
-# XXX Conversion
+# XXX targetfile
     def scan(self, params):
+        finish = params['document-finish']
+        if self.doc == None:
+            self.doc = document.document(self.config, format=params['document-type'])
         del params['document-type']
+        del params['document-finish']
         params['output-file'] = self.name+'-scan-%04d'
         params['d'] = self.get_sane_name()
         command = ['/usr/bin/scanadf']
@@ -70,17 +76,20 @@ class usb_scanner(scanner,usbdevice.usb_device):
             if len(value):
                 command.append(value)
         self.unclaim()
-        messages = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE).stderr
-        page = 0
-        for line in messages:
-            msg = line.split(' ')
+        scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE)
+        error = False
+        for line in scanadf.stderr:
+            msg = line.strip().split(' ')
             if msg[0] == 'scanadf:':
-                print 'ERROR!'
+                error = True
+                break
             if len(msg) == 3:
                 if msg[1] == 'document':
-                    print 'scanned page ',page,msg[2]
-                    page+=1
-        print 'finished'
+                    self.worker.put(self.doc.process_image('/dev/shm/'+msg[2]))
+        if (not error) and finish:
+            self.worker.put(document.outDocument(self.doc))
+            self.doc = None
+        scanadf.wait()
         self.claim()
 
     def get_sane_name(self):

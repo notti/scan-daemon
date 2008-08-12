@@ -1,5 +1,7 @@
 import worker
 import pyx
+from PIL import Image
+import os
 
 class picture2pdf(worker.work):
     """Takes a PIL image and converts it to Postscript Page
@@ -20,8 +22,8 @@ class picture2pdf(worker.work):
         self.flatecompresslevel = flatecompresslevel
     def doIt(self):
         c = pyx.canvas.canvas()
-        c.insert(pyx.bitmap.bitmap(0, 0, self.im, pyx.document.paperformat.A4.width, pyx.document.paperformat.A4.height, compressmode=self.compressmode, dctquality=self.dctquality, flatecompresslevel=self.flatecompresslevel))
-        del self.im
+        c.insert(pyx.bitmap.bitmap(0, 0, Image.open(self.im), pyx.document.paperformat.A4.width, pyx.document.paperformat.A4.height, compressmode=self.compressmode, dctquality=self.dctquality, flatecompresslevel=self.flatecompresslevel))
+        os.unlink(self.im)
         p = pyx.document.page(c)
         self.doc.insert(self.page,p)
 
