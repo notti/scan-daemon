@@ -70,19 +70,45 @@ os.umask(0077)
 os.setgid(config.gid)
 os.setuid(config.uid)
 
-# OK - so lets fork the main program which handles signals and spawns the necessary threads
+# OK - so lets do the double fork magic!
+try:
+    pid = os.fork()
+    if pid > 0:
+        os._exit(0)
+except OSError, e:
+    print >>sys.stderr, "fork #1 failed: %d (%s)" % (e.errno, e.strerror)
+    sys.exit(1)
 
-if os.fork() == 0:
-    t = threading.Thread(target = notify.serve_forever)
-    t.setDaemon(True)
+#decouple from parent environment
+os.chdir("/")
+os.setsid()
+
+try:
+    pid = os.fork()
+    if pid > 0:
+        os._exit(0)
+except OSError, e:
+    print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)
+    sys.exit(1)
+
+#we don't want to fill anyones terminal with aehh bullshit
+si = file('/dev/null', 'r')
+so = file('/dev/null', 'a+')
+se = file('/dev/null', 'a+', 0)
+os.dup2(si.fileno(), sys.stdin.fileno())
+os.dup2(so.fileno(), sys.stdout.fileno())
+os.dup2(se.fileno(), sys.stderr.fileno())
+
+t = threading.Thread(target = notify.serve_forever)
+t.setDaemon(True)
+t.start()
+t = threading.Thread(target = webserver.serve_forever)
+t.setDaemon(True)
+t.start()
+for name, scanner in scanner_list.iteritems():
+    t = threading.Thread(target = scanner.serve_forever)
+    t.setDaemon(True) #XXX move to device.py so that this one can end itself clean and shiny!
     t.start()
-    t = threading.Thread(target = webserver.serve_forever)
-    t.setDaemon(True)
-    t.start()
-    for name, scanner in scanner_list.iteritems():
-        t = threading.Thread(target = scanner.serve_forever)
-        t.setDaemon(True)
-        t.start()
-    
-    signal.pause()
+
+signal.pause()
 

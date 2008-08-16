@@ -15,7 +15,6 @@ class control:
         while True:
             try:
                 scanner, status = self.socket.recv(1024).split(' ')
-                print scanner, status
                 self.scanners[scanner].status_change(status)
             except:
                 pass
