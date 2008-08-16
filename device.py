@@ -102,7 +102,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         if self.doc != None:
             self.timer = self.timer + 1
             if self.timer > 15:
-                self.worker.put(document.outDocument(self.doc))
+                self.doc.finish()
                 self.doc = None
 
     def serve_forever(self):
