@@ -10,9 +10,8 @@ class fi_5110Cdj(device.usb_scanner):
 
     GET_OPTIONS    = '\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc2\x00\x00\x00\x00\x00\x00\x00\x0c\x00\x00\x00'
 
-    def __init__(self, config, worker):
-        device.usb_scanner.__init__(self, config, worker)
-        self.doc                = None
+    def __init__(self, config):
+        device.usb_scanner.__init__(self, config)
         self.default_buttons    = {}
         self.name = "fi-5110Cdj"
         for i in range(1,11):

@@ -3,7 +3,7 @@
 import signal, os, sys, threading, subprocess, stat
 import pwd, grp
 import ConfigParser
-import control, device, http, worker
+import control, device, http
 import glob
 
 # -=-=-=-=-=- READ CONFIG -=-=-=-=-=-=-
@@ -55,12 +55,10 @@ for device in glob.iglob('devices/*py'):
 
 devices = dict(devices)
 
-runqueue = worker.worker(config.num_worker_threads)
-
 scanner_list = {}
 for scanner in config.scanner.split(','):
     scanner = scanner.strip()
-    scanner_list[scanner] = devices[scanner](config, runqueue)
+    scanner_list[scanner] = devices[scanner](config)
 
 # ^ 
 
@@ -75,7 +73,6 @@ os.setuid(config.uid)
 # OK - so lets fork the main program which handles signals and spawns the necessary threads
 
 if os.fork() == 0:
-    runqueue.serve_forever()
     t = threading.Thread(target = notify.serve_forever)
     t.setDaemon(True)
     t.start()

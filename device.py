@@ -22,13 +22,12 @@ class scanner:
         pass
 
 class usb_scanner(scanner,usbdevice.usb_device):
-    def __init__(self, config, worker):
+    def __init__(self, config):
         scanner.__init__(self, config)
         usbdevice.usb_device.__init__(self)
         self.connected = False
         self.event = threading.Event()
         self.doc = None
-        self.worker = worker
         self.timer = 0
 
     def get_sources(self):
@@ -62,8 +61,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
 # XXX targetfile
     def scan(self, params):
         finish = params['document-finish']
-        if self.doc == None:
-            self.doc = document.document(self.config, format=params['document-type'])
+        document_type = params['document-type']
         del params['document-type']
         del params['document-finish']
         params['output-file'] = self.name+'-scan-%04d'
@@ -78,6 +76,8 @@ class usb_scanner(scanner,usbdevice.usb_device):
                 command.append(value)
         self.unclaim()
         scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE)
+        if self.doc == None:
+            self.doc = document.document(self.config, format=document_type)
         error = False
         for line in scanadf.stderr:
             msg = line.strip().split(' ')
@@ -86,9 +86,9 @@ class usb_scanner(scanner,usbdevice.usb_device):
                 break
             if len(msg) == 3:
                 if msg[1] == 'document':
-                    self.worker.put(self.doc.process_image('/dev/shm/'+msg[2]))
+                    self.doc.process_image('/dev/shm/'+msg[2])
         if (not error) and finish:
-            self.worker.put(document.outDocument(self.doc))
+            self.doc.finish()
             self.doc = None
         else:
             self.timer = 0
