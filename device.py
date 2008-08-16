@@ -29,6 +29,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         self.event = threading.Event()
         self.doc = None
         self.worker = worker
+        self.timer = 0
 
     def get_sources(self):
         pass
@@ -89,11 +90,20 @@ class usb_scanner(scanner,usbdevice.usb_device):
         if (not error) and finish:
             self.worker.put(document.outDocument(self.doc))
             self.doc = None
+        else:
+            self.timer = 0
         scanadf.wait()
         self.claim()
 
     def get_sane_name(self):
         return ''
+
+    def reset_document(self):
+        if self.doc != None:
+            self.timer = self.timer + 1
+            if self.timer > 15:
+                self.worker.put(document.outDocument(self.doc))
+                self.doc = None
 
     def serve_forever(self):
         self.connected = self.attach_scanner()

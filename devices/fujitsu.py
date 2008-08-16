@@ -51,6 +51,7 @@ class fi_5110Cdj(device.usb_scanner):
         pressed_scan = 0
         pressed_send = 0
         while (not (pressed_scan or pressed_send)) and self.connected:
+            self.reset_document()
             try:
                 status = self.read_buttons()
             except:
