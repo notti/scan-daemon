@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import threading, time
 import os,sys
 import Queue
@@ -63,9 +62,9 @@ class document:
 
     def process_image(self, im, compressmode='DCT', dct_quality=None, flatecompresslevel=None):
         if dct_quality == None:
-            dct_quality = self.config.default_dct_quality
+            dct_quality = self.config.dct_quality
         if flatecompresslevel == None:
-            flatecompresslevel = self.config.default_flatecompresslevel
+            flatecompresslevel = self.config.flatecompresslevel
         self.cmd.write(im+' '+compressmode+' '+str(dct_quality)+' '+str(flatecompresslevel)+'\n')
 
 
