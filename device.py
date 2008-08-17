@@ -1,4 +1,4 @@
-import time, threading, usbdevice, syslog
+import time, threading, usbdevice, syslog, os, signal
 import subprocess, glob
 import document
 
@@ -66,6 +66,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         self.doc = None
         self.timer = 0
         self.running = True
+        self.scanadf = None
 
     def get_sources(self):
         pass
@@ -114,7 +115,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
             if len(value):
                 command.append(value)
         self.unclaim()
-        scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE)
+        self.scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE)
         if self.doc == None:
             self.doc = document.document(self.config, format=document_type)
         error = False
@@ -131,7 +132,8 @@ class usb_scanner(scanner,usbdevice.usb_device):
             self.doc = None
         else:
             self.timer = 0
-        scanadf.wait()
+        self.scanadf.wait()
+        self.scanadf = null
         self.claim()
 
     def get_sane_name(self):
@@ -148,6 +150,8 @@ class usb_scanner(scanner,usbdevice.usb_device):
         self.running    = False
         self.connected  = False
         self.event.set()
+        if self.scanadf != None:
+            os.kill(self.scanadf.pid, signal.SIGTERM)
 
     def serve_forever(self):
         self.connected = self.attach_scanner()
