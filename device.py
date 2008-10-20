@@ -83,6 +83,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         self.timer = 0
         self.running = True
         self.scanadf = None
+        self.id = 0
 
     def get_sources(self):
         pass
@@ -120,7 +121,7 @@ class usb_scanner(scanner,usbdevice.usb_device):
         document_type = params['document-type']
         del params['document-type']
         del params['document-finish']
-        params['output-file'] = self.name+'-scan-%04d'
+        params['output-file'] = self.name+'-scan-'+str(self.id)+'-%04d'
         params['d'] = self.get_sane_name()
         command = ['/usr/bin/scanadf']
         for option, value in params.iteritems():
@@ -131,11 +132,14 @@ class usb_scanner(scanner,usbdevice.usb_device):
             if len(value):
                 command.append(value)
         self.unclaim()
-        self.scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE)
+        self.scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE, bufsize=1)
         if self.doc == None:
             self.doc = document.document(self.config, format=document_type)
         error = False
-        for line in scanadf.stderr:
+        while True:
+            line = self.scanadf.stderr.readline()
+            if not line:
+                break
             msg = line.strip().split(' ')
             if msg[0] == 'scanadf:':
                 error = True
@@ -149,8 +153,9 @@ class usb_scanner(scanner,usbdevice.usb_device):
         else:
             self.timer = 0
         self.scanadf.wait()
-        self.scanadf = null
+        self.scanadf = None
         self.claim()
+        self.id = self.id + 1
 
     def get_sane_name(self):
         return ''

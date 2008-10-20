@@ -30,8 +30,8 @@ class http:
         self.scanners       = scanners
         try:
             self.httpd          = BaseHTTPServer.HTTPServer(('',8080), MyHandler)
-        except socket.error, err:
-            syslog.syslog(syslog.LOG_ERR, err)
+        except socket.error, (err,message):
+            syslog.syslog(syslog.LOG_ERR, message)
             os.exit(1)
         self.httpd.config   = config
         self.httpd.scanners = scanners
