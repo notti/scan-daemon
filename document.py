@@ -35,38 +35,13 @@ class document:
             in_conversion  = 0
             import pyx
             from PIL import Image
-            f = file("/mnt/save/scans/test","a")
-#            def worker():
-#                while True:
-#                    item = queue.get()
-#                    f.write(str(item)[0]+' '+str(item[4])+"\n")
-#                    f.flush()
-#                    image = Image.open(item[0])
-#                    if format == "pdf":
-#                        c = pyx.canvas.canvas()
-#                        c.insert(pyx.bitmap.bitmap(0,0,image,pyx.document.paperformat.A4.width,pyx.document.paperformat.A4.height,compressmode=item[1],dctquality=int(item[2]),flatecompresslevel=int(item[3])))
-#                        pages[item[4]] = pyx.document.page(c)
-#                    else:
-#                        filename = "%s-%d.%s" % targetfile, item[4], format
-#                        image.save(filename)
-#                        os.chmod(filename, 0664)
-#                    os.unlink(item[0])
-#                    del image
-#                    queue.task_done()
                 
             os.close(w)
             cmd = os.fdopen(r, 'r')
-#            queue = Queue.Queue()
-#            for i in range(config.num_worker_threads):
-#                t = threading.Thread(target=worker)
-#                t.setDaemon(True)
-#                t.start()
             while True:
                 command = cmd.readline()
                 if not command:
                     break
-                f.write(command+"\n")
-                f.flush()
                 command=command.strip()
                 if command == 'finish':
                     break
@@ -83,21 +58,17 @@ class document:
                         os.chmod(filename, 0664)
                     os.unlink(item[0])
                     del image
-#                    queue.put(command.rsplit(' ',3)+[pagenumber])
                     pagenumber = pagenumber + 1
-#            queue.join()
             if format == 'pdf':
                 d = pyx.document.document(pages)
                 filename = "%s.%s" % (targetfile, format)
                 d.writePDFfile(filename)
                 os.chmod(filename,0664)
             cmd.close()
-            f.close()
             os._exit(0)
 
 
     def process_image(self, im, compressmode='DCT', dct_quality=None, flatecompresslevel=None):
-        print >> sys.stderr, im 
         if dct_quality == None:
             dct_quality = self.config.dct_quality
         if flatecompresslevel == None:
