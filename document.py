@@ -53,7 +53,7 @@ class document:
                         c.insert(pyx.bitmap.bitmap(0,0,image,pyx.document.paperformat.A4.width,pyx.document.paperformat.A4.height,compressmode=item[1],dctquality=int(item[2]),flatecompresslevel=int(item[3])))
                         pages.append(pyx.document.page(c))
                     else:
-                        filename = "%s-%d.%s" % targetfile, pagenumber, format
+                        filename = "%s-%d.%s" % (targetfile, pagenumber, format)
                         image.save(filename)
                         os.chmod(filename, 0664)
                     os.unlink(item[0])

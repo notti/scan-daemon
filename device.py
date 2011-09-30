@@ -17,6 +17,7 @@
 import time, threading, usbdevice, syslog, os, signal
 import subprocess, glob
 import document
+import sys
 
 class scanners:
     def __init__(self, config):
@@ -131,6 +132,8 @@ class usb_scanner(scanner,usbdevice.usb_device):
                 command.append('--'+option)
             if len(value):
                 command.append(value)
+        command += ['--pagewidth', '210', '--pageheight', '297', '-x', '210', '-y', '297']
+        print >> sys.stderr, command
         self.unclaim()
         self.scanadf = subprocess.Popen(command, cwd='/dev/shm', stderr=subprocess.PIPE, bufsize=1)
         if self.doc == None:
@@ -138,10 +141,13 @@ class usb_scanner(scanner,usbdevice.usb_device):
         error = False
         while True:
             line = self.scanadf.stderr.readline()
+            print >> sys.stderr, line
             if not line:
                 break
             msg = line.strip().split(' ')
             if msg[0] == 'scanadf:':
+                if msg[1][0:7] == 'rounded':
+                    continue
                 error = True
                 break
             if len(msg) == 3:
