@@ -57,7 +57,7 @@ class cfg:
 
 try:
     config = cfg()
-    config.parser = ConfigParser.SafeConfigParser()
+    config.parser = ConfigParser.RawConfigParser()
     config.parser.read(open('defaults.cfg'))
     config.parser.read(['scanner.cfg','/etc/scanner.cfg'])
 
@@ -66,6 +66,7 @@ try:
     config.gid                  = config.parser.get('main','gid')
     config.destination          = config.parser.get('main', 'destination')
     config.socket               = config.parser.get('main', 'socket')
+    config.date			= config.parser.get('main', 'date')
     config.port                 = config.parser.getint('main', 'port')
     config.num_worker_threads   = config.parser.getint('main','worker_threads')
     config.dct_quality          = config.parser.getint('main','dct_quality')
@@ -77,7 +78,7 @@ except ConfigParser.NoOptionError, err:
     syslog.syslog(syslog.LOG_ERR, "No '%s' Option in Section '%s' in config file!" % (err.section, err.option))
     exit(os.EX_CONFIG)
 except ConfigParser.Error, err:
-    syslog.syslog(syslog.LOG_ERR, err)
+    syslog.syslog(syslog.LOG_ERR, str(err))
     exit(os.EX_CONFIG)
 
 #convert uid/gid if needed

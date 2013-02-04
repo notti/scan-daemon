@@ -14,7 +14,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
-import BaseHTTPServer, socket, syslog
+import BaseHTTPServer, socket, syslog, sys
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(s):
@@ -29,10 +29,10 @@ class http:
         self.config         = config
         self.scanners       = scanners
         try:
-            self.httpd          = BaseHTTPServer.HTTPServer(('',8080), MyHandler)
+            self.httpd          = BaseHTTPServer.HTTPServer(('',config.port), MyHandler)
         except socket.error, (err,message):
             syslog.syslog(syslog.LOG_ERR, message)
-            os.exit(1)
+            sys.exit(1)
         self.httpd.config   = config
         self.httpd.scanners = scanners
     def serve_forever(self):

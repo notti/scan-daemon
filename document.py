@@ -25,7 +25,7 @@ class document:
         r, w = os.pipe()
         self.pid = os.fork()
         if targetfile == None:
-            targetfile="%s/scan-%d" % (config.destination, int(time.time()))
+            targetfile="%s/scan-%s" % (config.destination, time.strftime(config.date))
         if self.pid:
             os.close(r)
             self.cmd = os.fdopen(w, 'w')
