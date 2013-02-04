@@ -1,0 +1,28 @@
+[main]
+worker_threads = 3
+dct_quality = 60
+flatecompresslevel = 6
+scanner = fi-5110Cdj
+date = %Y-%m-%d %H:%M:%S
+destination = /path/to/pdfs
+uid = scanner
+gid = scanner
+socket = /var/run/scanner.sock
+port = 8080
+ipadresses = 127.0.0.1
+
+[compressmode]
+Lineart = Flate
+Default = DCT
+
+[fi-5110Cdj]
+1  = Color Duplex 150 pdf
+2  = Color Duplex 300 pdf
+3  = Color Front 150 pdf
+4  = Color Front 300 pdf
+5  = Gray Duplex 150 pdf
+6  = Gray Duplex 300 pdf
+7  = Gray Front 150 pdf
+8  = Gray Front 300 pdf
+9  = Color Front 600 tiff
+10 = Color Duplex 600 tiff
